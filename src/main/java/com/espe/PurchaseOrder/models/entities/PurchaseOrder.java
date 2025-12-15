@@ -2,6 +2,7 @@ package com.espe.PurchaseOrder.models.entities;
 
 import com.espe.PurchaseOrder.enums.Currency;
 import com.espe.PurchaseOrder.enums.Status;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
@@ -18,13 +19,11 @@ public class PurchaseOrder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
 
     @NotBlank
-    @Pattern(
-            regexp = "^PO-\\d{4}-\\d{6}$",
-            message = "Formato requerido: PO-YYYY-XXXXXX"
-    )
+    @Pattern(regexp = "^PO-\\d{4}-\\d{6}$")
     private String orderNumber;
 
     @NotBlank
@@ -35,18 +34,24 @@ public class PurchaseOrder {
     private Status status;
 
     @NotNull
-    @DecimalMin(value = "0.0", inclusive = true)
+    @DecimalMin("0.0")
     private BigDecimal totalAmount;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     private Currency currency;
 
-    // ❗ backend-only
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @NotNull
     private LocalDate expectedDeliveryDate;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     // getters y setters
 

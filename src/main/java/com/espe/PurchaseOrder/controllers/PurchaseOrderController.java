@@ -8,6 +8,7 @@ import com.espe.PurchaseOrder.specifications.PurchaseOrderSpecifications;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,8 @@ public class PurchaseOrderController {
     private PurchaseOrderService service;
 
     @PostMapping
-    public ResponseEntity<PurchaseOrder> save(
-            @Valid @RequestBody PurchaseOrder order) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(service.save(order));
+    public ResponseEntity<PurchaseOrder> save(@Valid @RequestBody PurchaseOrder order) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.save(order));
     }
 
     @GetMapping
@@ -39,8 +36,10 @@ public class PurchaseOrderController {
             @RequestParam(required = false) Currency currency,
             @RequestParam(required = false) BigDecimal minTotal,
             @RequestParam(required = false) BigDecimal maxTotal,
-            @RequestParam(required = false) LocalDateTime from,
-            @RequestParam(required = false) LocalDateTime to
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
     ) {
 
         if (minTotal != null && minTotal.compareTo(BigDecimal.ZERO) < 0)
@@ -48,6 +47,9 @@ public class PurchaseOrderController {
 
         if (maxTotal != null && maxTotal.compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("maxTotal inválido");
+
+        if (minTotal != null && maxTotal != null && minTotal.compareTo(maxTotal) > 0)
+            throw new IllegalArgumentException("minTotal no puede ser mayor que maxTotal");
 
         if (from != null && to != null && from.isAfter(to))
             throw new IllegalArgumentException("from no puede ser mayor que to");
